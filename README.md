@@ -127,6 +127,7 @@ Ctrl + A => I
 ## The Web Server
 
 ```bash
+sudo apt remove apache2
 sudo apt install nginx
 ```
 
