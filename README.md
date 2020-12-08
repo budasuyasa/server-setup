@@ -3,61 +3,63 @@
 List of todos to setup a new Debian/Ubuntu based server for production and 
 development environment.
 
-## The First Thing First
+## 🏁 First Thing First
 
+```console
+$ sudo apt update -y
 ```
-sudo apt update -y
-```
 
-## The Utilities
+## ⚒ The Utilities
 
-Basic Utilities
+Install basic utilities
 
-```
-sudo apt install -y tmux htop vim net-tools zsh zip unzip scp
+```console
+$ sudo apt install -y tmux htop vim net-tools zsh zip unzip scp
 ```
 
 
 ### Install oh-my-zsh
 
-```bash
-sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+```console
+$ sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
 ```
 
 **Add some plugin to make life easier**
 
-Install zsh-autosuggestions:
-```bash
-git clone https://github.com/zsh-users/zsh-autosuggestions.git $ZSH_CUSTOM/plugins/zsh-autosuggestions
+Install `zsh-autosuggestions`:
+
+```console
+$ git clone https://github.com/zsh-users/zsh-autosuggestions.git $ZSH_CUSTOM/plugins/zsh-autosuggestions
 ```
 
-Install zsh-syntax-highlighting:
+Install `zsh-syntax-highlighting`:
 
-```bash
-git clone https://github.com/zsh-users/zsh-syntax-highlighting.git $ZSH_CUSTOM/plugins/zsh-syntax-highlighting
+```console
+$ git clone https://github.com/zsh-users/zsh-syntax-highlighting.git $ZSH_CUSTOM/plugins/zsh-syntax-highlighting
 ```
 
 Edit configuration file:
-```
-vim ~/.zshrc
+
+```console
+$ vim ~/.zshrc
 ```
 
 Append `zsh-autosuggestions` & `zsh-syntax-highlighting` to `plugins()` section:
 
-```bash
+```ini
 plugins=(git zsh-autosuggestions zsh-syntax-highlighting)
 ```
 
 Save quit and restart `zsh`:
 
-```bash
-source ~/.zshrc
+```console
+$ source ~/.zshrc
 ```
 
 ### Install Tmux Plugin Manager
 
-```bash
-git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
+```console
+$ git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
 ```
 
 
@@ -65,13 +67,13 @@ git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
 
 Create new configuration file:
 
-```bash
-vim ~/.tmux.conf
+```console
+$ vim ~/.tmux.conf
 ```
 
 And put code bellow:
 
-```bash
+```ini
 # remap prefix from C-b to C-a
 unbind C-b
 set-option -g prefix C-a
@@ -116,31 +118,31 @@ set -g mouse on
 ```
 
 Save, quit and restart tmux:
-```bash
-Ctrl + A => I
+```console
+$ Ctrl + A => I
 # or restart the session/terminal emulator
 ```
 
 
 
 
-## The Web Server
+## 🚦The Web Server
 
-```bash
-sudo apt remove apache2
-sudo apt install nginx
+```console
+$ sudo apt remove apache2
+$ sudo apt install nginx
 ```
 
 
-## The Programming Languages
+## 🕹The Programming Languages
 
 ### Basic PHP Installation for Laravel Project
 
 Install PHP and required extentions:
-```bash
-sudo add-apt-repository ppa:ondrej/php
-sudo apt-get update
-sudo apt-get install -y php7.3 \ 
+```console
+$ sudo add-apt-repository ppa:ondrej/php
+$ sudo apt-get update
+$ sudo apt-get install -y php7.3 \ 
 	php7.3-curl \
 	php7.3-dev \
 	php7.3-gd \
@@ -159,25 +161,25 @@ sudo apt-get install -y php7.3 \
 
 Install `composer`:
 
-```bash
-cd ~
-curl -sS https://getcomposer.org/installer -o composer-setup.php
+```console
+$ cd ~
+$ curl -sS https://getcomposer.org/installer -o composer-setup.php
 ```
 
 Verify composer  SHA-384 hash [from here](https://composer.github.io/pubkeys.html)
 
-```bash
-HASH={put_the_hash_here}
+```console
+$ HASH={put_the_hash_here}
 ```
 
 Make sure the installer is valid:
-```bash
-php -r "if (hash_file('SHA384', 'composer-setup.php') === '$HASH') { echo 'Installer verified';  } else { echo 'Installer corrupt'; unlink('composer-setup.php');  } echo PHP_EOL;"
+```console
+$ php -r "if (hash_file('SHA384', 'composer-setup.php') === '$HASH') { echo 'Installer verified';  } else { echo 'Installer corrupt'; unlink('composer-setup.php');  } echo PHP_EOL;"
 ```
 
 Finish the installation:
-```bash
-sudo php composer-setup.php --install-dir=/usr/local/bin --filename=composer
+```console
+$ sudo php composer-setup.php --install-dir=/usr/local/bin --filename=composer
 ```
 
 
@@ -186,45 +188,81 @@ sudo php composer-setup.php --install-dir=/usr/local/bin --filename=composer
 ### NodeJS
 
 Install latest version of NodeJS
-```bash
-curl -sL https://deb.nodesource.com/setup_current.x | sudo -E bash -
-sudo apt-get install -y nodejs
-
+```console
+$ curl -sL https://deb.nodesource.com/setup_current.x | sudo -E console -
+$ sudo apt-get install -y nodejs
 ```
 
-## The Databases
+## 💾 The Databases
 
-```bash
-sudo apt install mysql-server redis-server
+```console
+$ sudo apt install mysql-server redis-server
 ```
 
-### The Docker
+### Enable Remote Access For MySQL
 
-Install Docker
+> ⚠ Allow remote access is not recommended for production environment, 
+but if you insist, here how to do it:
+
+Make sure 3306 port not blocked by firewall:
+
+```console
+$ iptables -A INPUT -i eth0 -p tcp --destination-port 3306 -j ACCEPT
+$ service iptables save
+$ service iptables restart
 ```
-sudo apt-get install \
+
+Depends on your mysql.conf, find line with `bind-address` and change it like so:
+
+```ini
+bind-address = 0.0.0.0
+```
+
+Enable user remote access privileges:
+
+```sql
+mysql> CREATE USER 'root'@'%' IDENTIFIED WITH mysql_native_password BY 'yourpassword';
+
+mysql> GRANT ALL PRIVILIGES ON *.* TO 'root'@'%';
+
+mysql> FLUSH PRIVILEGES;
+```
+
+And finally, restart mysql services:
+
+```console
+$ sudo service mysql restart
+```
+
+
+## 🐳 The Docker
+
+Install Docker:
+
+```console
+$ sudo apt-get install \
 	apt-transport-https \
 	ca-certificates \
 	curl \
 	gnupg-agent \
 	software-properties-common
 
-curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+$ curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
 
-sudo apt update && sudo apt-get install docker-ce docker-ce-cli containerd.io
+$ sudo apt update && sudo apt-get install docker-ce docker-ce-cli containerd.io
 ```
 
 After installation:
 
-```
-sudo groupadd docker
-sudo usermod -aG docker $USER
-sudo reboot
+```console
+$ sudo groupadd docker
+$ sudo usermod -aG docker $USER
+$ sudo reboot
 ```
 
-After Reboot:
-```
-newgrp docker 
+After reboot:
+```console
+$ newgrp docker 
 ```
 
 
